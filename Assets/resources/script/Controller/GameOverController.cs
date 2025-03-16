@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ImageLoseController : MonoBehaviour
+public class GameOverScreenController : MonoBehaviour
 {
     public GameObject LoseGameImg;
     private void Awake()
@@ -20,5 +20,6 @@ public class ImageLoseController : MonoBehaviour
     public void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        PlayerPrefs.DeleteAll();
     }
 }

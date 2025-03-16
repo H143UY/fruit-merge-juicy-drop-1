@@ -1,5 +1,6 @@
 ﻿using Core.Pool;
 using DG.Tweening;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -15,12 +16,17 @@ public class FruitController : MonoBehaviour
     private bool CheckGameOver;
     private bool canbounce;
     public bool isMerging;
-
+    public int uniqueID;
     private void Awake()
     {
         isUpgraded = false;
+        canbounce = !isUpgraded;
+        if (!FruitNew)
+        {
+            FruitNew = true;
+        }
+        uniqueID = GenerateUniqueID();
     }
-
     private void Start()
     {
         rg = GetComponent<Rigidbody2D>();
@@ -28,12 +34,10 @@ public class FruitController : MonoBehaviour
         circle = GetComponent<CircleCollider2D>();
         circle.enabled = false;
         isIdle = false;
-        FruitNew = true;
         CheckGameOver = false;
-        canbounce = !isUpgraded;
         isMerging = false;
+        Debug.Log($"Unique ID: {uniqueID}");
     }
-
     private void Update()
     {
         if (FruitNew && !isUpgraded)
@@ -64,12 +68,11 @@ public class FruitController : MonoBehaviour
                 isIdle = true;
             }
         }
-        if (isUpgraded)
+        if (isUpgraded || !FruitNew)
         {
             circle.enabled = true;
         }
     }
-
     public void Release()
     {
         FruitNew = false;
@@ -77,6 +80,7 @@ public class FruitController : MonoBehaviour
         {
             circle.enabled = true;
         }
+        FruitManager.instance.AddFruitsToList(this);
     }
 
     public void SetLevel(int newLevel, bool isNew, bool upgraded = false)
@@ -85,6 +89,14 @@ public class FruitController : MonoBehaviour
         FruitNew = isNew;
         isUpgraded = upgraded;
         isMerging = false;
+        if (isNew || upgraded)
+        {
+            uniqueID = GenerateUniqueID();
+        }
+    }
+    private int GenerateUniqueID()
+    {
+        return Guid.NewGuid().GetHashCode();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -117,6 +129,8 @@ public class FruitController : MonoBehaviour
                             this.transform.DOMove(spawnPos, 0.5f);
                             otherFruit.transform.DOMove(spawnPos, 0.5f).OnComplete(() =>
                             {
+                                FruitManager.instance.RemoveFruits(otherFruit);
+                                FruitManager.instance.RemoveFruits(this);
                                 SmartPool.Instance.Despawn(otherFruit.gameObject);
                                 SmartPool.Instance.Despawn(this.gameObject);
                                 FruitManager.instance.UpLevelFruit(upLevel, spawnPos);
@@ -143,9 +157,12 @@ public class FruitController : MonoBehaviour
     {
         animator.SetBool("isIdle", isIdle);
     }
-
     private void SetIdle()
     {
         isIdle = false;
+    }
+    public void SetBounce()
+    {
+        canbounce = false;
     }
 }
