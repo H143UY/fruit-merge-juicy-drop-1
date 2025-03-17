@@ -3,8 +3,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 using DG.Tweening;
-using System.Xml;
-
 public class FruitManager : MonoBehaviour
 {
     public static FruitManager instance;

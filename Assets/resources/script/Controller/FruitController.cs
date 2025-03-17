@@ -36,7 +36,6 @@ public class FruitController : MonoBehaviour
         isIdle = false;
         CheckGameOver = false;
         isMerging = false;
-        Debug.Log($"Unique ID: {uniqueID}");
     }
     private void Update()
     {
@@ -101,7 +100,7 @@ public class FruitController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.tag == "san" || collision.gameObject.tag == "Fruit")
+        if (collision.gameObject.CompareTag("san") || collision.gameObject.CompareTag("Fruit"))
         {
             if (canbounce)
             {
@@ -109,38 +108,35 @@ public class FruitController : MonoBehaviour
                 canbounce = false;
             }
         }
-        if (collision.gameObject.tag == "Fruit")
+
+        if (collision.gameObject.CompareTag("Fruit"))
         {
             FruitController otherFruit = collision.gameObject.GetComponent<FruitController>();
 
             if (otherFruit != null && otherFruit.level == this.level && !isMerging && !otherFruit.isMerging)
             {
+                isMerging = true;
+                otherFruit.isMerging = true;
                 DOVirtual.DelayedCall(0.5f, () =>
                 {
-                    if (this.GetInstanceID() < otherFruit.GetInstanceID())
+                    int upLevel = level + 1;
+                    if (upLevel < FruitManager.instance.fruits.Length)
                     {
-                        isMerging = true;
-                        otherFruit.isMerging = true;
-
-                        int upLevel = level + 1;
-                        if (upLevel < FruitManager.instance.fruits.Length)
+                        Vector3 spawnPos = (transform.position + otherFruit.transform.position) / 2;
+                        this.transform.DOMove(spawnPos, 0.5f);
+                        otherFruit.transform.DOMove(spawnPos, 0.5f).OnComplete(() =>
                         {
-                            Vector3 spawnPos = (transform.position + otherFruit.transform.position) / 2;
-                            this.transform.DOMove(spawnPos, 0.5f);
-                            otherFruit.transform.DOMove(spawnPos, 0.5f).OnComplete(() =>
-                            {
-                                FruitManager.instance.RemoveFruits(otherFruit);
-                                FruitManager.instance.RemoveFruits(this);
-                                SmartPool.Instance.Despawn(otherFruit.gameObject);
-                                SmartPool.Instance.Despawn(this.gameObject);
-                                FruitManager.instance.UpLevelFruit(upLevel, spawnPos);
-                            });
-                        }
-                        else
-                        {
+                            FruitManager.instance.RemoveFruits(otherFruit);
+                            FruitManager.instance.RemoveFruits(this);
                             SmartPool.Instance.Despawn(otherFruit.gameObject);
                             SmartPool.Instance.Despawn(this.gameObject);
-                        }
+                            FruitManager.instance.UpLevelFruit(upLevel, spawnPos);
+                        });
+                    }
+                    else
+                    {
+                        SmartPool.Instance.Despawn(otherFruit.gameObject);
+                        SmartPool.Instance.Despawn(this.gameObject);
                     }
                 });
             }
